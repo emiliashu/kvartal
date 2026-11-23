@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Квартал — подбор недвижимости в Санкт-Петербурге">
+  <title>Квартал — недвижимость Санкт-Петербурга</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="styles.css?v=32">
+</head>
+<body class="home-page">
+  <header class="site-header" id="site-header">
+    <div class="container header-layout">
+      <a class="brand" href="#/home" aria-label="Квартал — на главную">
+        <strong>КВАРТАЛ</strong>
+      </a>
+
+      <span class="page-nav-title" id="page-nav-title" hidden></span>
+
+      <h1 class="service-subtitle" id="home-service-title">сервис для подбора недвижимости в Санкт-Петербурге</h1>
+
+      <nav class="main-nav" aria-label="Основная навигация">
+        <a href="#/moderator" id="moderator-nav" data-nav="moderator" hidden>Панель модератора</a>
+        <a href="#/home" data-nav="home">Главная</a>
+        <a href="#/search" data-nav="search">Поиск</a>
+        <a href="#/favorites" data-nav="favorites">Избранное</a>
+        <a href="#/messages" data-nav="messages">Сообщения</a>
+        <a href="#/profile" data-nav="profile">Профиль</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-wordmark" id="page-wordmark" aria-hidden="true" hidden>
+    <svg viewBox="0 0 1000 420" preserveAspectRatio="none">
+      <text x="500" y="-70" textLength="1030" lengthAdjust="spacingAndGlyphs" text-anchor="middle" dominant-baseline="hanging">КВАРТАЛ</text>
+    </svg>
+  </div>
+
+  <main class="site-main" id="main-content">
+    <section class="screen" data-screen="home">
+      <div class="container">
+        <form class="home-search" id="home-search-form">
+          <label class="search-field search-field-main">
+            <span>Что ищем сегодня?</span>
+            <input type="text" name="query" placeholder="Двухкомнатная квартира">
+          </label>
+          <label class="search-field">
+            <span>Район</span>
+            <select name="district">
+              <option value="">Любой район</option>
+              <option>Центральный</option>
+              <option>Московский</option>
+              <option>Невский</option>
+              <option>Приморский</option>
+              <option>Петроградский</option>
+              <option>Адмиралтейский</option>
+            </select>
+          </label>
+          <label class="search-field">
+            <span>Комнаты</span>
+            <select name="rooms">
+              <option value="">Любое количество</option>
+              <option value="0">Студия</option>
+              <option value="1">Одна</option>
+              <option value="2">Две</option>
+              <option value="3">Три и больше</option>
+            </select>
+          </label>
+          <label class="search-field">
+            <span>Цена до</span>
+            <input type="text" name="maxPrice" inputmode="numeric" placeholder="10 000 000 ₽">
+          </label>
+          <button class="button button-dark home-search-button" type="submit">Найти</button>
+        </form>
+
+        <section class="preferences-section">
+          <div class="preferences-title">
+            <div>
+              <h2>Расскажите нам о своих предпочтениях</h2>
+              <p>Ответы помогут расположить подходящие квартиры выше остальных</p>
+            </div>
+            <span id="quiz-progress">1 из 6</span>
+          </div>
+
+          <div class="progress-line">
+            <span id="quiz-progress-bar"></span>
+          </div>
+
+          <div class="quiz-body" id="quiz-body">
+            <article class="quiz-step" data-quiz-step="0">
+              <h3>Какой тип недвижимости вас интересует?</h3>
+              <div class="quiz-options">
+                <label><input type="radio" name="quiz-kind" value="new"><span>Новостройка</span></label>
+                <label><input type="radio" name="quiz-kind" value="secondary"><span>Вторичное жильё</span></label>
+                <label><input type="radio" name="quiz-kind" value="any"><span>Без разницы</span></label>
+              </div>
+            </article>
+
+            <article class="quiz-step" data-quiz-step="1" hidden>
+              <h3>Сколько комнат вы рассматриваете?</h3>
+              <div class="quiz-options">
+                <label><input type="radio" name="quiz-rooms" value="0"><span>Студия</span></label>
+                <label><input type="radio" name="quiz-rooms" value="1"><span>Одна</span></label>
+                <label><input type="radio" name="quiz-rooms" value="2"><span>Две</span></label>
+                <label><input type="radio" name="quiz-rooms" value="3"><span>Три и больше</span></label>
+                <label><input type="radio" name="quiz-rooms" value="any"><span>Без разницы</span></label>
+              </div>
+            </article>
+
+            <article class="quiz-step" data-quiz-step="2" hidden>
+              <h3>Какой бюджет для вас комфортен?</h3>
+              <div class="quiz-options">
+                <label><input type="radio" name="quiz-budget" value="8000000"><span>До 8 млн ₽</span></label>
+                <label><input type="radio" name="quiz-budget" value="10000000"><span>До 10 млн ₽</span></label>
+                <label><input type="radio" name="quiz-budget" value="13000000"><span>До 13 млн ₽</span></label>
+                <label><input type="radio" name="quiz-budget" value="99999999"><span>Более 13 млн ₽</span></label>
+              </div>
+            </article>
+
+            <article class="quiz-step" data-quiz-step="3" hidden>
+              <h3>В каком районе вы ищете квартиру?</h3>
+              <div class="quiz-options">
+                <label><input type="radio" name="quiz-district" value="Центральный"><span>Центральный</span></label>
+                <label><input type="radio" name="quiz-district" value="Московский"><span>Московский</span></label>
+                <label><input type="radio" name="quiz-district" value="Невский"><span>Невский</span></label>
+                <label><input type="radio" name="quiz-district" value="Приморский"><span>Приморский</span></label>
+                <label><input type="radio" name="quiz-district" value="any"><span>Без разницы</span></label>
+              </div>
+            </article>
+
+            <article class="quiz-step" data-quiz-step="4" hidden>
+              <h3>Что важно иметь рядом с домом?</h3>
+              <div class="quiz-options">
+                <label><input type="radio" name="quiz-priority" value="metro"><span>Метро</span></label>
+                <label><input type="radio" name="quiz-priority" value="school"><span>Школа</span></label>
+                <label><input type="radio" name="quiz-priority" value="park"><span>Парк</span></label>
+                <label><input type="radio" name="quiz-priority" value="shops"><span>Магазины</span></label>
+              </div>
+            </article>
+
+            <article class="quiz-step" data-quiz-step="5" hidden>
+              <h3>Куда должны выходить окна?</h3>
+              <div class="quiz-options">
+                <label><input type="radio" name="quiz-orientation" value="Север"><span>Север</span></label>
+                <label><input type="radio" name="quiz-orientation" value="Восток"><span>Восток</span></label>
+                <label><input type="radio" name="quiz-orientation" value="Юг"><span>Юг</span></label>
+                <label><input type="radio" name="quiz-orientation" value="Запад"><span>Запад</span></label>
+                <label><input type="radio" name="quiz-orientation" value="any"><span>Без разницы</span></label>
+              </div>
+            </article>
+
+            <div class="quiz-complete" id="quiz-complete" hidden>
+              <h3>Подбор по предпочтениям готов</h3>
+              <p>Подходящие по ответам квартиры отмечены процентом соответствия.</p>
+              <button class="text-button" type="button" id="quiz-reset">Пройти тест заново</button>
+            </div>
+          </div>
+
+          <div class="quiz-footer">
+            <button class="text-button" type="button" id="quiz-back" hidden>← Предыдущий вопрос</button>
+            <button class="button button-dark" type="button" id="quiz-next">Следующий вопрос</button>
+          </div>
+        </section>
+
+        <section class="recommendations">
+          <h2>Вам может понравиться</h2>
+          <div class="property-grid" id="home-properties"></div>
+          <div class="empty-state" id="home-empty" hidden>Пока нет опубликованных объявлений</div>
+        </section>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="search" hidden>
+      <div class="container">
+        <h1 class="page-category">Поиск</h1>
+
+        <form class="page-search" id="search-form">
+          <input type="search" name="query" placeholder="Двухкомнатная квартира">
+          <select name="sort">
+            <option value="match">По соответствию</option>
+            <option value="priceAsc">Сначала дешевле</option>
+            <option value="priceDesc">Сначала дороже</option>
+            <option value="areaDesc">По площади</option>
+          </select>
+          <button class="button button-dark" type="submit">Найти</button>
+        </form>
+
+        <div class="search-layout">
+          <aside class="filter-summary">
+            <h2>Фильтры</h2>
+            <h3>Активные фильтры</h3>
+            <div class="chips" id="active-filters"></div>
+            <p class="result-note" id="search-result-count">Найдено 0 объявлений</p>
+            <button class="button button-dark wide-button" type="button" data-open-filters="search">Изменить фильтры</button>
+            <button class="text-button reset-link" type="button" id="reset-search-filters">Сбросить всё</button>
+          </aside>
+
+          <section class="results-column">
+            <div class="result-grid" id="search-results"></div>
+            <div class="empty-state" id="search-empty" hidden>По выбранным параметрам квартиры не найдены</div>
+          </section>
+
+          <aside class="map-card">
+            <div class="map-canvas" id="search-map"></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="favorites" hidden>
+      <div class="container">
+        <h1 class="page-category">Избранное</h1>
+
+        <form class="favorites-filters" id="favorites-filter-form">
+          <label class="range-filter">
+            <span>Цена, ₽</span>
+            <div class="range-inputs">
+              <input type="text" name="minPrice" inputmode="numeric" placeholder="от">
+              <input type="text" name="maxPrice" inputmode="numeric" placeholder="до">
+            </div>
+          </label>
+          <label class="range-filter">
+            <span>Площадь, м²</span>
+            <div class="range-inputs">
+              <input type="number" name="minArea" min="0" placeholder="от">
+              <input type="number" name="maxArea" min="0" placeholder="до">
+            </div>
+          </label>
+          <button class="button button-dark" type="submit">Применить</button>
+        </form>
+
+        <div class="favorites-tools">
+          <span>Сортировка</span>
+          <button class="filter-chip active" type="button" data-favorite-sort="default">По умолчанию</button>
+          <button class="filter-chip" type="button" data-favorite-sort="priceAsc">Сначала дешевле</button>
+          <button class="filter-chip" type="button" data-favorite-sort="priceDesc">Сначала дороже</button>
+          <button class="filter-chip" type="button" data-favorite-sort="areaDesc">По площади</button>
+          <button class="filter-chip" type="button" data-open-filters="favorites">Другие фильтры</button>
+        </div>
+
+        <div class="favorites-layout">
+          <section>
+            <p class="result-note" id="favorites-count"></p>
+            <div class="favorite-grid" id="favorite-results"></div>
+            <div class="empty-state" id="favorites-empty" hidden>В избранном пока нет квартир</div>
+          </section>
+
+          <aside class="map-card">
+            <div class="map-canvas" id="favorites-map"></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="listing" hidden>
+      <div class="container">
+        <a class="back-link" href="#/search" id="listing-back-link">← К поиску</a>
+        <h1 class="page-category">Объявление</h1>
+
+        <div class="listing-gallery">
+          <div class="listing-photo large-photo"><img id="detail-photo-main" alt="Фотография основного помещения"></div>
+          <div class="listing-side-gallery">
+            <div class="listing-photo side-photo-top"><img id="detail-photo-two" alt="Фотография комнаты"></div>
+            <div class="listing-photo"><img id="detail-photo-three" alt="Фотография кухни"></div>
+            <div class="listing-photo"><img id="detail-photo-four" alt="Фотография прихожей"></div>
+          </div>
+        </div>
+
+        <div class="listing-content">
+          <section class="listing-left">
+            <h2 id="detail-location">Московский район · Санкт-Петербург</h2>
+            <p class="detail-address" id="detail-address">Московский проспект, 205</p>
+            <p class="detail-price" id="detail-price">8 000 000 ₽</p>
+
+            <div class="details-card">
+              <h3>Характеристики</h3>
+              <div class="details-row" id="detail-specs"></div>
+            </div>
+
+            <div class="seller-card">
+              <div>
+                <h3>Продавец</h3>
+                <p id="detail-seller"></p>
+              </div>
+              <span class="avatar" id="detail-seller-avatar">А</span>
+            </div>
+
+            <div class="listing-actions">
+              <button class="button button-light" type="button" id="detail-favorite">
+                <svg class="heart-wide" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 20.6 10.55 19.3C5.4 14.7 2 11.65 2 7.9 2 4.85 4.4 2.5 7.45 2.5c1.73 0 3.4.8 4.55 2.06A6.08 6.08 0 0 1 16.55 2.5C19.6 2.5 22 4.85 22 7.9c0 3.75-3.4 6.8-8.55 11.42Z"/>
+                </svg>
+                В избранное
+              </button>
+              <button class="button button-dark" type="button" id="detail-message">Написать</button>
+            </div>
+          </section>
+
+          <aside class="description-card">
+            <h2>Описание</h2>
+            <p id="detail-summary"></p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="profile" hidden>
+      <div class="container">
+        <h1 class="page-category" id="profile-page-title">Личный кабинет</h1>
+
+        <section class="profile-about" id="profile-user-section">
+          <h2>О вас</h2>
+          <div class="profile-about-grid">
+            <div class="profile-photo-block">
+              <div class="profile-photo" id="profile-avatar">
+                <img id="profile-photo-image" alt="Фото профиля" hidden>
+                <span id="profile-initial">М</span>
+              </div>
+              <button class="text-button" type="button" id="profile-photo-edit">редактировать фото профиля</button>
+              <p class="profile-photo-status" id="profile-photo-status" hidden></p>
+              <input type="file" id="profile-photo-input" accept="image/*" hidden>
+            </div>
+
+            <form class="profile-fields" id="profile-form">
+              <label>
+                <span>Имя</span>
+                <input type="text" name="name" id="profile-name">
+              </label>
+              <label>
+                <span>Email</span>
+                <input type="email" name="email" id="profile-email">
+              </label>
+              <label>
+                <span>Дата рождения</span>
+                <input type="date" name="birthDate" id="profile-birth-date">
+              </label>
+              <button class="button button-dark profile-save" type="submit">Сохранить</button>
+            </form>
+
+            <div class="profile-logout">
+              <button class="button button-dark" type="button" id="logout-button">Выйти из аккаунта</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="my-listings" id="profile-user-listings">
+          <h2>Мои объявления</h2>
+          <div class="profile-summary">
+            <div class="summary-metrics">
+              <span>Всего объявлений: <b id="profile-total">0</b></span>
+              <span>Активные: <b id="profile-active">0</b></span>
+              <span>На проверке: <b id="profile-pending">0</b></span>
+            </div>
+            <a class="button button-dark" href="#/publish">Разместить объявление</a>
+          </div>
+          <div class="account-list" id="profile-listings"></div>
+        </section>
+
+        <section class="moderator-profile" id="profile-moderator-section" hidden>
+          <h2>Профиль модератора</h2>
+          <p class="moderator-role">Роль: модератор объявлений</p>
+          <p>Доступ только к проверке объявлений. Управление пользователями и ролями недоступно.</p>
+          <a class="button button-dark" href="#/moderator">Перейти к очереди</a>
+        </section>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="publish" hidden>
+      <div class="container">
+        <a class="back-link back-link-light" href="#/profile">← В личный кабинет</a>
+        <h1 class="page-category">Размещение помещения</h1>
+
+        <form class="publish-layout" id="publish-form" data-listing-id="">
+          <aside class="publish-preview">
+            <h2>Предпросмотр</h2>
+            <div class="publish-preview-card">
+              <div class="preview-photo">
+                <img id="publish-preview-photo" alt="" hidden>
+                <span id="publish-preview-photo-empty">Фотография</span>
+              </div>
+              <div class="preview-copy">
+                <h3 id="publish-preview-title">Вторичка · 1 комната</h3>
+                <p class="preview-price" id="publish-preview-price">Цена не указана</p>
+                <p id="publish-preview-specs">Площадь и этаж</p>
+                <p id="publish-preview-location">Московский район</p>
+                <p id="publish-preview-description">Описание появится здесь.</p>
+              </div>
+            </div>
+            <p class="preview-note">Так объявление будет выглядеть в каталоге.</p>
+          </aside>
+
+          <section class="publish-content">
+            <div class="photo-upload-grid">
+              <label class="upload-box">
+                <img id="publish-photo-one" alt="Первая фотография помещения" hidden>
+                <span class="upload-label">+ Фото 1</span>
+                <input type="file" name="photos" accept="image/*" multiple data-photo-input="0">
+              </label>
+              <label class="upload-box">
+                <img id="publish-photo-two" alt="Вторая фотография помещения" hidden>
+                <span class="upload-label">+ Фото 2</span>
+                <input type="file" name="photos" accept="image/*" multiple data-photo-input="1">
+              </label>
+              <label class="upload-box">
+                <img id="publish-photo-three" alt="Третья фотография помещения" hidden>
+                <span class="upload-label">+ Фото 3</span>
+                <input type="file" name="photos" accept="image/*" multiple data-photo-input="2">
+              </label>
+              <label class="upload-box upload-add">
+                <span class="upload-label">Добавить фотографии</span>
+                <input type="file" name="photos" accept="image/*" multiple data-photo-input="3">
+              </label>
+            </div>
+            <p class="photo-required-note">
+              Для отправки объявления на проверку обязательно добавьте хотя бы одну фотографию.
+            </p>
+
+            <div class="publish-form-card">
+              <h2>Данные о помещении</h2>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <span class="form-label">Тип недвижимости</span>
+                  <div class="segment-group">
+                    <label><input type="radio" name="kind" value="new"><span>Новостройка</span></label>
+                    <label><input type="radio" name="kind" value="secondary" checked><span>Вторичка</span></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <span class="form-label">Количество комнат</span>
+                  <div class="segment-group">
+                    <label><input type="radio" name="rooms" value="0"><span>Студия</span></label>
+                    <label><input type="radio" name="rooms" value="1" checked><span>1</span></label>
+                    <label><input type="radio" name="rooms" value="2"><span>2</span></label>
+                    <label><input type="radio" name="rooms" value="3"><span>3</span></label>
+                    <label><input type="radio" name="rooms" value="4"><span>4+</span></label>
+                  </div>
+                </div>
+
+                <fieldset class="form-group side-choice">
+                  <legend>Стороны света окон</legend>
+                  <p class="field-hint">В какое время в квартире обычно бывает солнце?</p>
+                  <div class="side-choice-grid">
+                    <label><input type="radio" name="sunTime" value="morning"><span>утром<br><small>до 12:00</small></span></label>
+                    <label><input type="radio" name="sunTime" value="day"><span>днём<br><small>12:00–17:00</small></span></label>
+                    <label><input type="radio" name="sunTime" value="evening"><span>вечером<br><small>после 17:00</small></span></label>
+                    <label><input type="radio" name="sunTime" value="none"><span>солнце почти<br><small>не бывает</small></span></label>
+                  </div>
+                  <button class="sun-side-button" type="button" id="determine-sun-side">Определить</button>
+                  <p class="sun-side-result" id="sun-side-result" hidden>
+                    <span>Результат:</span>
+                    <strong id="sun-side-value"></strong>
+                  </p>
+                  <p class="sun-side-status" id="sun-side-status" hidden></p>
+                </fieldset>
+
+                <label class="form-group">
+                  <span>Общая площадь, м²</span>
+                  <input type="number" name="area" min="10" step="0.1" required>
+                </label>
+
+                <label class="form-group">
+                  <span>Цена, ₽</span>
+                  <input type="number" name="price" min="1000000" required>
+                </label>
+
+                <label class="form-group">
+                  <span>Этаж</span>
+                  <input type="number" name="floor" min="1" required>
+                </label>
+
+                <label class="form-group">
+                  <span>Этажей в доме</span>
+                  <input type="number" name="totalFloors" min="1" required>
+                </label>
+
+                <div class="form-group">
+                  <span class="form-label">Парковка</span>
+                  <div class="segment-group">
+                    <label><input type="radio" name="parking" value="true"><span>Есть</span></label>
+                    <label><input type="radio" name="parking" value="false" checked><span>Нет</span></label>
+                  </div>
+                </div>
+
+                <label class="form-group">
+                  <span>Район</span>
+                  <select name="district" required>
+                    <option>Центральный</option>
+                    <option selected>Московский</option>
+                    <option>Невский</option>
+                    <option>Приморский</option>
+                    <option>Петроградский</option>
+                    <option>Адмиралтейский</option>
+                    <option>Выборгский</option>
+                    <option>Василеостровский</option>
+                  </select>
+                </label>
+
+                <label class="form-group address-group">
+                  <span>Адрес</span>
+                  <input type="text" name="address" placeholder="Улица, дом" required>
+                </label>
+
+                <label class="form-group summary-group">
+                  <span>Описание</span>
+                  <textarea name="summary" rows="5" required></textarea>
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <a class="button button-light" href="#/profile">Отмена</a>
+                <button class="button button-dark" type="submit">Опубликовать</button>
+              </div>
+            </div>
+          </section>
+        </form>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="messages" hidden>
+      <div class="container">
+        <h1 class="page-category">Сообщения</h1>
+        <div class="messages-page">
+          <section>
+            <div class="messages-head">
+              <h2>Все чаты</h2>
+              <span id="messages-count">4 диалога</span>
+            </div>
+            <div class="chat-list" id="chat-list"></div>
+            <div class="empty-state" id="messages-empty" hidden>Пока нет диалогов</div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="chat" hidden>
+      <div class="container">
+        <a class="back-link" href="#/messages">← К чатам</a>
+        <h1 class="page-category">Переписка</h1>
+
+        <div class="chat-layout">
+          <section class="chat-header">
+            <div>
+              <h2 id="chat-person">Анна</h2>
+              <p id="chat-listing-line">2-комнатная квартира · 8 000 000 ₽</p>
+            </div>
+            <div class="chat-header-actions">
+              <button class="text-button" type="button" id="chat-rate-seller" hidden>Оценить продавца</button>
+              <a class="text-button" id="chat-open-listing" href="#/search">Открыть объявление</a>
+            </div>
+          </section>
+          <section class="chat-window">
+            <div class="chat-date">Сегодня</div>
+            <div class="chat-messages" id="chat-messages"></div>
+
+            <form class="chat-form" id="chat-form">
+              <input type="text" name="message" placeholder="Напишите сообщение..." autocomplete="off" required>
+              <button class="button button-dark" type="submit">Отправить</button>
+            </form>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="moderator" hidden>
+      <div class="container">
+        <h1 class="page-category">Панель модератора</h1>
+        <div class="moderator-caption-row">
+          <p class="moderator-caption">Проверяйте обязательные поля, фотографии и корректность публикации</p>
+          <button class="button button-light" type="button" id="open-moderation-guide">Руководство проверки</button>
+        </div>
+
+        <div class="moderator-stats">
+          <div><span>В очереди</span><strong id="moderator-queue-count">0</strong></div>
+          <div><span>Новые</span><strong id="moderator-new-count">0</strong></div>
+          <div><span>Одобрено сегодня</span><strong id="moderator-approved-count">0</strong></div>
+        </div>
+
+        <section class="queue-panel">
+          <div class="queue-head">
+            <h2>Очередь объявлений</h2>
+            <span>На проверку</span>
+          </div>
+          <div class="queue-list" id="moderator-queue"></div>
+          <div class="empty-state" id="moderator-empty" hidden>Очередь проверки пуста</div>
+        </section>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="review" hidden>
+      <div class="container">
+        <a class="back-link" href="#/moderator">← К объявлениям</a>
+        <h1 class="page-category">Объявление. Проверка</h1>
+
+        <div class="review-gallery">
+          <div class="review-main-photo"><img id="review-photo-one" alt="Основная фотография проверяемого объявления"></div>
+          <div class="review-side-gallery">
+            <div class="review-photo review-side-photo"><img id="review-photo-two" alt="Дополнительная фотография объявления"></div>
+            <div class="review-photo"><img id="review-photo-three" alt="Интерьер проверяемого объявления"></div>
+            <div class="review-photo"><img id="review-photo-four" alt="Кухня проверяемого объявления"></div>
+          </div>
+        </div>
+
+        <div class="review-content">
+          <section>
+            <h2 id="review-location"></h2>
+            <p class="detail-address" id="review-address"></p>
+            <p class="detail-price" id="review-price"></p>
+
+            <div class="details-card">
+              <h3>Характеристики</h3>
+              <p id="review-specs"></p>
+            </div>
+
+            <div class="details-card">
+              <h3>Продавец</h3>
+              <p id="review-seller"></p>
+            </div>
+          </section>
+
+          <aside class="description-card">
+            <h2>Описание</h2>
+            <p id="review-summary"></p>
+          </aside>
+        </div>
+
+        <div class="moderator-decisions">
+          <button class="button button-dark" type="button" id="approve-listing">Одобрить</button>
+          <button class="button button-light" type="button" data-reason="return">Вернуть на исправление</button>
+          <button class="button button-light" type="button" data-reason="reject">Отклонить</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen auth-screen" data-screen="login" hidden>
+      <div class="auth-card">
+        <a class="brand auth-brand" href="#/home"><strong>КВАРТАЛ</strong></a>
+
+        <form class="auth-form" id="login-form">
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" placeholder="maria@kvartal.ru" required>
+          </label>
+          <label>
+            <span>Пароль</span>
+            <div class="password-field">
+              <input type="password" name="password" placeholder="Введите пароль" required>
+              <button class="password-toggle" type="button" data-password-toggle aria-label="Показать пароль">Показать</button>
+            </div>
+          </label>
+          <p class="form-error" id="login-error" hidden></p>
+          <button class="button button-dark" type="submit">Войти</button>
+        </form>
+
+        <div class="auth-links">
+          <span>Нет аккаунта?</span>
+          <a href="#/register">Создать аккаунт</a>
+        </div>
+
+        <div class="demo-access">
+          <strong>Вход в систему</strong>
+          <span>Зарегистрируйте пользователя, а роль модератора назначьте через DBeaver.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen auth-screen" data-screen="register" hidden>
+      <div class="auth-card register-card">
+        <a class="brand auth-brand" href="#/home"><strong>КВАРТАЛ</strong></a>
+        <a class="back-link" href="#/login">← Назад</a>
+        <h1>Создание аккаунта</h1>
+
+        <form class="auth-form" id="register-form">
+          <label>
+            <span>Имя</span>
+            <input type="text" name="name" placeholder="Мария Соколова" required>
+          </label>
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" placeholder="maria@kvartal.ru" required>
+          </label>
+          <label>
+            <span>Пароль</span>
+            <div class="password-field">
+              <input type="password" name="password" minlength="8" required>
+              <button class="password-toggle" type="button" data-password-toggle aria-label="Показать пароль">Показать</button>
+            </div>
+          </label>
+          <label>
+            <span>Повторите пароль</span>
+            <div class="password-field">
+              <input type="password" name="passwordRepeat" minlength="8" required>
+              <button class="password-toggle" type="button" data-password-toggle aria-label="Показать пароль">Показать</button>
+            </div>
+          </label>
+          <p class="form-hint">Не менее 8 символов, заглавная и строчная буквы, цифра и специальный символ.</p>
+          <label>
+            <span>Фото профиля</span>
+            <input type="file" id="register-photo-input" name="photo" accept="image/*">
+          </label>
+          <label>
+            <span>Дата рождения</span>
+            <input type="date" name="birthDate">
+          </label>
+          <p class="form-error" id="register-error" hidden></p>
+          <button class="button button-dark" type="submit">Зарегистрироваться</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="site-footer">
+    <p>Квартал · Санкт-Петербург</p>
+  </footer>
+
+  <dialog class="modal" id="filters-dialog">
+    <form method="dialog" class="modal-head">
+      <h2 id="filters-dialog-title">Фильтры</h2>
+      <button class="dialog-close" aria-label="Закрыть">×</button>
+    </form>
+
+    <form class="filters-form" id="filters-form">
+      <div class="filters-grid">
+        <label>
+          <span>Тип недвижимости</span>
+          <select name="kind">
+            <option value="">Любой</option>
+            <option value="new">Новостройка</option>
+            <option value="secondary">Вторичка</option>
+          </select>
+        </label>
+        <label>
+          <span>Комнаты</span>
+          <select name="rooms">
+            <option value="">Любое количество</option>
+            <option value="0">Студия</option>
+            <option value="1">Одна</option>
+            <option value="2">Две</option>
+            <option value="3">Три и больше</option>
+          </select>
+        </label>
+        <label>
+          <span>Район</span>
+          <select name="district">
+            <option value="">Любой район</option>
+            <option>Центральный</option>
+            <option>Московский</option>
+            <option>Невский</option>
+            <option>Приморский</option>
+            <option>Петроградский</option>
+            <option>Адмиралтейский</option>
+            <option>Выборгский</option>
+            <option>Василеостровский</option>
+          </select>
+        </label>
+        <label>
+          <span>Сторона света</span>
+          <select name="orientation">
+            <option value="">Любая</option>
+            <option>Север</option>
+            <option>Восток</option>
+            <option>Юг</option>
+            <option>Запад</option>
+          </select>
+        </label>
+        <label>
+          <span>Цена от</span>
+          <input type="number" name="minPrice">
+        </label>
+        <label>
+          <span>Цена до</span>
+          <input type="number" name="maxPrice">
+        </label>
+        <label>
+          <span>Площадь от</span>
+          <input type="number" name="minArea">
+        </label>
+        <label>
+          <span>Площадь до</span>
+          <input type="number" name="maxArea">
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="button button-light" type="button" id="filters-reset">Сбросить</button>
+        <button class="button button-dark" type="submit">Показать объявления</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal" id="reason-dialog">
+    <form method="dialog" class="modal-head">
+      <h2 id="reason-title">Вернуть на исправление</h2>
+      <button class="dialog-close" aria-label="Закрыть">×</button>
+    </form>
+
+    <form id="reason-form">
+      <label>
+        <span>Причина решения</span>
+        <textarea name="reason" rows="5" required></textarea>
+      </label>
+      <div class="modal-actions">
+        <button class="button button-light" type="button" data-close-dialog>Отмена</button>
+        <button class="button button-dark" type="submit" id="reason-submit">Отправить автору</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal small-modal" id="seller-rating-dialog">
+    <form method="dialog" class="modal-head">
+      <h2>Оценка продавца</h2>
+      <button class="dialog-close" aria-label="Закрыть">×</button>
+    </form>
+    <form id="seller-rating-form">
+      <fieldset class="rating-choice">
+        <legend>Насколько продавец помог с выбором?</legend>
+        <label><input type="radio" name="score" value="1" required><span>1</span></label>
+        <label><input type="radio" name="score" value="2"><span>2</span></label>
+        <label><input type="radio" name="score" value="3"><span>3</span></label>
+        <label><input type="radio" name="score" value="4"><span>4</span></label>
+        <label><input type="radio" name="score" value="5"><span>5</span></label>
+      </fieldset>
+      <label>
+        <span>Комментарий по желанию</span>
+        <textarea name="comment" rows="4" maxlength="1000"></textarea>
+      </label>
+      <div class="modal-actions">
+        <button class="button button-light" type="button" data-close-dialog>Отмена</button>
+        <button class="button button-dark" type="submit">Сохранить оценку</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal small-modal" id="close-listing-dialog">
+    <h2>Закрыть объявление?</h2>
+    <p>Объявление исчезнет из поиска и избранного. Отметка о закрытии сохранится в личном кабинете.</p>
+    <div class="modal-actions">
+      <button class="button button-light" type="button" id="cancel-close-listing">Отмена</button>
+      <button class="button button-dark" type="button" id="confirm-close-listing">Покупатель найден</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal moderation-guide-dialog" id="moderation-guide-dialog">
+    <form method="dialog" class="modal-head">
+      <h2>Руководство проверки</h2>
+      <button class="dialog-close" aria-label="Закрыть">×</button>
+    </form>
+    <section>
+      <h3>Перед принятием решения проверьте</h3>
+      <ul>
+        <li>объявление относится к продаже квартиры в Санкт-Петербурге;</li>
+        <li>указаны тип, цена, площадь, комнаты, этаж, район и адрес;</li>
+        <li>описание непустое и не вводит покупателя в заблуждение;</li>
+        <li>загружено хотя бы одно содержательное фото объекта;</li>
+        <li>текст и изображения не содержат рекламы, контактов, оскорблений и запрещённых материалов;</li>
+        <li>дублирующее или явно тестовое объявление не публикуется.</li>
+      </ul>
+      <h3>Вернуть на исправление</h3>
+      <p>Если данные можно дополнить без изменения сути предложения: не хватает обязательного поля, фотографии не относятся к объекту, описание слишком короткое или адрес указан неточно. В причине перечислите конкретные исправления.</p>
+      <h3>Отклонить</h3>
+      <p>Если предложение продаёт не квартиру, повторяет уже опубликованное объявление, содержит явно ложные сведения, контакты в описании, рекламу или запрещённый контент.</p>
+      <h3>Одобрить</h3>
+      <p>Если обязательные данные заполнены, фотографии допустимы, описание понятное, а признаков дубля или обмана не обнаружено. Одобрение означает допуск объявления в каталог, но не подтверждает право собственности и юридическую чистоту объекта.</p>
+    </section>
+  </dialog>
+
+  <dialog class="modal small-modal" id="notice-dialog">
+    <h2 id="notice-title"></h2>
+    <p id="notice-text"></p>
+    <button class="button button-dark" type="button" id="notice-button">Продолжить</button>
+  </dialog>
+
+  <template id="listing-card-template">
+    <article class="property-card">
+      <div class="property-image-wrap">
+        <a class="listing-link">
+          <img class="property-image" alt="">
+        </a>
+      </div>
+      <div class="property-info">
+        <h3 class="listing-link"></h3>
+        <p class="property-price"></p>
+        <p class="property-specs"></p>
+        <p class="property-location"></p>
+        <span class="match-badge" hidden></span>
+        <button class="favorite-button" type="button" aria-label="Добавить в избранное">
+          <svg class="heart-wide" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 20.6 10.55 19.3C5.4 14.7 2 11.65 2 7.9 2 4.85 4.4 2.5 7.45 2.5c1.73 0 3.4.8 4.55 2.06A6.08 6.08 0 0 1 16.55 2.5C19.6 2.5 22 4.85 22 7.9c0 3.75-3.4 6.8-8.55 11.42Z"/>
+          </svg>
+        </button>
+      </div>
+    </article>
+  </template>
+
+  <template id="account-listing-template">
+    <div class="account-listing-row">
+      <article class="account-listing">
+        <a class="account-listing-photo">
+          <img alt="">
+        </a>
+        <div class="account-listing-main">
+          <h3></h3>
+          <p class="account-listing-meta"></p>
+          <p class="account-listing-note"></p>
+        </div>
+      </article>
+      <aside class="account-listing-state">
+        <strong class="status-badge"></strong>
+        <span class="views-line"></span>
+        <span class="saves-line"></span>
+        <button class="button button-light close-listing-button" type="button" hidden>Покупатель найден</button>
+      </aside>
+    </div>
+  </template>
+
+  <template id="chat-row-template">
+    <a class="chat-row">
+      <span class="avatar"></span>
+      <span class="chat-copy">
+        <strong></strong>
+        <small class="chat-property"></small>
+        <small class="chat-last"></small>
+      </span>
+      <span class="chat-side">
+        <small class="chat-time"></small>
+        <span class="chat-unread" hidden></span>
+      </span>
+    </a>
+  </template>
+
+  <template id="moderator-row-template">
+    <article class="moderator-row">
+      <img alt="">
+      <div class="moderator-row-main">
+        <h3></h3>
+        <p class="moderator-price"></p>
+        <p class="moderator-specs"></p>
+      </div>
+      <a class="button button-dark">Проверить</a>
+    </article>
+  </template>
+
+  <script type="application/json" id="seed-data">
+  {
+    "listings": [],
+    "chats": []
+  }
+  </script>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="api.js?v=4" defer></script>
+<script src="app.js?v=30" defer></script>
+</body>
+</html>
